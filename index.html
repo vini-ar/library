@@ -24,17 +24,17 @@
             </tbody>
         </table>
     </div>
-    <button class="addBook-btn">New Book</button>
+    <button id="showForm-btn">Show Form</button>
     <form class="addBook-form hide">
         <label for="book-title">Title <input id="book-title" type="text" value="The Hobbit"></label>
         <label for="book-author">Author <input type="text" id="book-author" value="Tolkien"></label>
         <label for="book-pages">Pages <input type="number" id="book-pages" value="260"></label>
         <label for="book-status">Choose a Book Status: </label>
         <select name="book-status" id="book-status">
-            <option value="Already Read">Read</options>
+            <option value="Read">Read</options>
             <option value="Not Read">Not Read</option>
         </select>
-        <input type="button" value="Add New Book" onclick="addBookToLibrary()">
+        <input id="addBook-btn" type="button" value="Add New Book">
     </form>
 </body>
 </html>

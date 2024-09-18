@@ -1,141 +1,147 @@
-const tableBody = document.querySelector("tbody")
-const addBookButton = document.querySelector(".addBook-btn")
-const addBookForm = document.querySelector(".addBook-form")
-const bookTitleInput = document.querySelector("#book-title")
-const bookAuthorInput = document.querySelector("#book-author")
-const bookPagesInput = document.querySelector("#book-pages")
-const bookStatusSelect = document.querySelector("#book-status") 
 
+(function() {
+    let Library = {
+        bookList: [],
+        init: function() {
+            this.cacheDom();
+            this.setButtonToToggleForm();
+            this.setButtonToUpdateLibrary();
+        },
+        updateLibrary: function() {
+            const book = this.getUserInput();
+            this.updateBookList(book);
+            this.displayNewData(book);
+            console.log(this.bookList)
+        },
+        cacheDom: function() {
+            this.showFormButton = document.querySelector("#showForm-btn")
+            this.form = document.querySelector(".addBook-form")
+            this.tbody = document.querySelector("tbody")
+            this.inputBookTitle = document.querySelector("#book-title")
+            this.inputBookAuthor = document.querySelector("#book-author");
+            this.inputBookPages = document.querySelector("#book-pages")
+            this.selectBookStatus = document.querySelector("#book-status")
+            this.addBookButton = document.querySelector("#addBook-btn")
+        },
+        setButtonToToggleForm: function() {
+            const showFormButton = this.showFormButton
+            const form = this.form
 
-let myLibrary = [];
+            showFormButton.addEventListener("click", () => {
+                if (form.classList.contains("hide")) {
+                    showFormButton.textContent = "Hide Form"
+                    form.classList.remove("hide")
+                }
+                else {
+                    showFormButton.textContent = "Show Form"
+                    form.classList.add("hide")
+                }
+            })
+        },
+        setButtonToUpdateLibrary: function() {
+            const addBookButton = this.addBookButton
 
+            addBookButton.addEventListener('click', () => {
+                this.updateLibrary();
+            })
 
-addBookButton.addEventListener("click", () => {
-        addBookForm.classList.remove("hide")
-})
+        },
+        getUserInput: function() {
+            const title = this.inputBookTitle.value;
+            const author = this.inputBookAuthor.value;
+            const pages = this.inputBookPages.value;
+            const status = this.selectBookStatus.value;
 
-function Book(title, author, pages, status) {
-    this.title = title,
-    this.author = author,
-    this.pages = pages,
-    this.status = status;
-}
+            return {
+                title: title,
+                author: author,
+                pages: pages,
+                status: status
+            }
+        },
+        updateBookList: function(book) {
+            this.bookList.push(book)
+        },
 
+        createTableCell: function(content="", attributes={}) {
+            let td = document.createElement("td")
+            td.textContent = content;
 
+            for(const[key,value] of Object.entries(attributes)) {
+                td.setAttribute(key, value)
+            }
 
+            return td;
+        },
+        createTableRow: function(content="", attributes={}) {
+            let tr = document.createElement("tr");
+            tr.textContent = content;
 
+            for(const[key,value] of Object.entries(attributes)) {
+                tr.setAttribute(key, value)
+            }
 
+            return tr
+        },
+        createButton: function(content="", attributes={}) {
+            let button = document.createElement("button")
+            button.textContent = content;
 
-const Library = {
+            for(const [key, value] of Object.entries(attributes)) {
+                button.setAttribute(key, value);
+            }
 
-    update: function displayLibrary(book) {
-        let tableRow = ElementFactory.tr("", {class: "table-book-row"})
+            return button
+        },        
+        updateBookStatus: function(book, changeStatusButton, removeBookButton) {
+            if (book.status === "Read") {
+                book.status = "Not Read"
+            } 
+            else {
+                book.status = "Read"
+            }
+        
+            let tableRow = changeStatusButton.parentElement.parentElement
+            let targetTableData = tableRow.querySelector(".table-data-status")
+            
+            targetTableData.textContent = book.status;
+            targetTableData.appendChild(changeStatusButton)
+            targetTableData.appendChild(removeBookButton)
+        
+        },
+        displayNewData: function(book) {
+            let tr = this.createTableRow("", { class: "book-table-row" });
+        
+            tr.appendChild(this.createTableCell(book.title, { class: "table-data-title" }));
+            tr.appendChild(this.createTableCell(book.author, { class: "table-data-author" }));
+            tr.appendChild(this.createTableCell(book.pages, { class: "table-data-pages" }));
+        
+            const statusCell = this.createTableCell(book.status, { class: "table-data-status" });
+            const changeStatusButton = this.createButton("Change Status", { class: "change-status-btn" });
+            
 
-        for(const[key, value] of Object.entries(book)) {
-            let td;
-            if (key === "status") {
-                td = ElementFactory.td(value + " ", {class: `table-data-${key}`});
-                let changeStatusButton = ElementFactory.button("Update");
-
-                changeStatusButton.addEventListener("click", function(e) {
-                    e.preventDefault();
-                    changeStatusButton.onclick = updateStatusBook(book, this)   
+            const removeBookButton = this.createButton("Remove Book", { class: "remove-book-btn" })
+            removeBookButton.addEventListener('click', (e) => {
+                e.preventDefault(removeBookButton);
+                const targetTableRow = removeBookButton.closest("tr")
+                targetTableRow.remove();
+                this.bookList = this.bookList.filter(function(item){
+                    return item != book
                 })
 
-                td.appendChild(changeStatusButton)
-            } else {
-                td = ElementFactory.td(value, "");
-            }
-            tableRow.appendChild(td)
-        }
+            })
 
-        let tdForButton = ElementFactory.td("Remove")
-        let removeBookButton = ElementFactory.button("Remove");
-        
-        removeBookButton.addEventListener("click", function(e) {
-            e.preventDefault();
-            removeBookButton.onclick = removeBook(book, this)
-        })
+            changeStatusButton.addEventListener("click", (e) => {
+                e.preventDefault();
+                this.updateBookStatus(book, changeStatusButton, removeBookButton);
+            });
+            
+            statusCell.appendChild(changeStatusButton);
+            statusCell.appendChild(removeBookButton);
 
-        tdForButton.appendChild(removeBookButton)
-        tableRow.appendChild(tdForButton)
-    
-        tableBody.appendChild(tableRow)
+            tr.appendChild(statusCell);
+            this.tbody.appendChild(tr);
+        },
     }
-}
-
-
-
-function removeBook(book, button) {
-    myLibrary = myLibrary.filter(function(item) {
-        return item !== book
-    })
-    
-    let parentTableRow = button.parentElement.parentElement;
-    parentTableRow.remove()
-}
-
-
-function updateStatusBook(book, button) {
-    if (book.status === "Already Read") {
-        book.status = "Not Read"
-    } 
-    else {
-        book.status = "Already Read"
-    }
-
-    let tableRow = button.parentElement.parentElement
-    let targetTableData = tableRow.querySelector(".table-data-status")
-    
-    targetTableData.textContent = book.status + " ";
-    targetTableData.appendChild(button)
-
-    console.log(button)
-}
-
-const ElementFactory = {
-    td: function(content = "", attributes = {}) {
-        const td = document.createElement("td");
-        td.textContent = content;
-        
-        for (const [key, value] of Object.entries(attributes)) {
-            td.setAttribute(key, value);
-        }
-        return td
-    },
-    button: function(content = "") {
-        const button = document.createElement("button")
-
-        button.textContent = content;
-
-        return button;
-    },
-    tr: function(content="", attributes = {}) {
-        const tr = document.createElement("tr")
-        tr.textContent = content
-
-        for(const[key, value] of Object.entries(attributes)) {
-            tr.setAttribute(key,value);
-        }
-        
-        return tr
-        }
-    }
-
-
-
-
-function addBookToLibrary() {
-    let title = bookTitleInput.value;
-    let author = bookAuthorInput.value
-    let pages = bookPagesInput.value;
-    let status = bookStatusSelect.value;
-
-    const newBook = new Book(title, author, pages, status)
-
-    myLibrary.push(newBook)
-
-
-    Library.update(newBook);
-}
-
+    Library.init()
+})()
